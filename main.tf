@@ -2,17 +2,115 @@
 # EC2
 #################################################
 
+resource "aws_instance" "this" {
+  ami                    = "${var.ami_id}"
+  instance_type          = "${var.instance_type}"
+  vpc_security_group_ids = ["${aws_security_group.ec2.id}"]
+  subnet_id              = "${var.ec2_subnet_id}"
+  ebs_optimized          = "true"
+  tags                   = "${merge(map("Name", "${var.env}"), var.tags)}"
+  volume_tags            = "${merge(map("Name", "${var.env}"), var.tags)}"
+
+  root_block_device {
+    volume_size           = "${var.volume_size}"
+    delete_on_termination = "${var.delete_volume}"
+  }
+}
+
 #################################################
 # S3
 #################################################
+
+resource "aws_s3_bucket" "this" {
+  bucket        = "${var.env}"
+  acl           = "log-delivery-write"
+  force_destroy = "true"
+  tags          = "${var.tags}"
+
+  server_side_encryption_configuration {
+    rule {
+      apply_server_side_encryption_by_default {
+        sse_algorithm = "AES256"
+      }
+    }
+  }
+}
 
 #################################################
 # ALB
 #################################################
 
+resource "aws_lb" "this" {
+  name               = "${var.env}"
+  internal           = false
+  load_balancer_type = "application"
+  security_groups    = ["${aws_security_group.alb.id}"]
+  subnets            = "${var.alb_subnet_ids}"
+  tags               = "${var.tags}"
+
+  access_logs {
+    bucket  = "${aws_s3_bucket.this.bucket}"
+    prefix  = "alb"
+    enabled = true
+  }
+}
+
+resource "aws_lb_target_group" "this" {
+  name        = "${var.env}"
+  port        = "${var.port}"
+  protocol    = "${var.protocol}"
+  vpc_id      = "${var.vpc_id}"
+  target_type = "instance"
+
+  health_check {
+    path = "/"
+  }
+}
+
+resource "aws_lb_listener" "http" {
+  load_balancer_arn = "${aws_lb.this.arn}"
+  port              = "80"
+  protocol          = "HTTP"
+
+  default_action {
+    type = "redirect"
+
+    redirect {
+      port        = "443"
+      protocol    = "HTTPS"
+      status_code = "HTTP_301"
+    }
+  }
+}
+
+resource "aws_lb_listener" "https" {
+  load_balancer_arn = "${aws_lb.this.arn}"
+  port              = "443"
+  protocol          = "HTTPS"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
+  certificate_arn   = "${var.acm_certificate_arn}"
+
+  default_action {
+    target_group_arn = "${aws_lb_target_group.this.id}"
+    type             = "forward"
+  }
+}
+
 #################################################
 # Route 53
 #################################################
+
+resource "aws_route53_record" "this" {
+  name    = "${var.dns_name}"
+  type    = "A"
+  zone_id = "${var.route53_zone_id}"
+
+  alias {
+    name                   = "${aws_lb.this.dns_name}"
+    zone_id                = "${aws_lb.this.zone_id}"
+    evaluate_target_health = false
+  }
+}
 
 #################################################
 # Security Groups

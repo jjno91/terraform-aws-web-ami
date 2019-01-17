@@ -50,10 +50,20 @@ variable "dns_name" {
 
 variable "alb_subnet_ids" {
   description = "(required) Subnet(s) to which the ALB will be deployed"
+  default     = []
+}
+
+variable "ec2_subnet_id" {
+  description = "(required) Subnet(s) to which the EC2 instance will be deployed"
   default     = ""
 }
 
-variable "ec2_subnet_ids" {
-  description = "(required) Subnet(s) to which the EC2 instance will be deployed"
-  default     = ""
+variable "volume_size" {
+  description = "(optional) https://www.terraform.io/docs/providers/aws/r/instance.html#volume_size"
+  default     = "50"
+}
+
+variable "delete_volume" {
+  description = "(optional) https://www.terraform.io/docs/providers/aws/r/instance.html#delete_on_termination"
+  default     = "false"
 }
