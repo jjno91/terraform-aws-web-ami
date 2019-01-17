@@ -50,7 +50,7 @@ resource "aws_lb" "this" {
   internal           = false
   load_balancer_type = "application"
   security_groups    = ["${aws_security_group.alb.id}"]
-  subnets            = "${var.alb_subnet_ids}"
+  subnets            = ["${var.alb_subnet_ids}"]
   tags               = "${var.tags}"
 
   access_logs {
