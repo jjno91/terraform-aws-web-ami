@@ -14,7 +14,7 @@ resource "aws_instance" "this" {
 
   root_block_device {
     volume_size           = "${var.volume_size}"
-    delete_on_termination = !${var.data_protection}
+    delete_on_termination = "${var.data_protection ? false : true}"
   }
 }
 
