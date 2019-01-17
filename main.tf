@@ -34,11 +34,6 @@ resource "aws_s3_bucket" "this" {
       }
     }
   }
-
-  logging {
-    target_bucket = "${var.env}"
-    target_prefix = "s3"
-  }
 }
 
 #################################################
