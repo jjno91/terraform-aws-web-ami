@@ -63,7 +63,7 @@ variable "volume_size" {
   default     = "50"
 }
 
-variable "delete_volume" {
-  description = "(optional) https://www.terraform.io/docs/providers/aws/r/instance.html#delete_on_termination"
+variable "data_protection" {
+  description = "(optional) Protects volumes and EC2 instances from deletion"
   default     = "false"
 }

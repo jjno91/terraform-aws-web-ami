@@ -3,17 +3,18 @@
 #################################################
 
 resource "aws_instance" "this" {
-  ami                    = "${var.ami_id}"
-  instance_type          = "${var.instance_type}"
-  vpc_security_group_ids = ["${aws_security_group.ec2.id}"]
-  subnet_id              = "${var.ec2_subnet_id}"
-  ebs_optimized          = "true"
-  tags                   = "${merge(map("Name", "${var.env}"), var.tags)}"
-  volume_tags            = "${merge(map("Name", "${var.env}"), var.tags)}"
+  ami                     = "${var.ami_id}"
+  instance_type           = "${var.instance_type}"
+  vpc_security_group_ids  = ["${aws_security_group.ec2.id}"]
+  subnet_id               = "${var.ec2_subnet_id}"
+  ebs_optimized           = "true"
+  tags                    = "${merge(map("Name", "${var.env}"), var.tags)}"
+  volume_tags             = "${merge(map("Name", "${var.env}"), var.tags)}"
+  disable_api_termination = "${var.data_protection}"
 
   root_block_device {
     volume_size           = "${var.volume_size}"
-    delete_on_termination = "${var.delete_volume}"
+    delete_on_termination = "!${var.data_protection}"
   }
 }
 
