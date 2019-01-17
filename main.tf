@@ -22,7 +22,7 @@ resource "aws_instance" "this" {
 #################################################
 
 resource "aws_s3_bucket" "this" {
-  bucket        = "${var.env}"
+  bucket        = "${var.env}-logs"
   acl           = "log-delivery-write"
   force_destroy = "true"
   tags          = "${var.tags}"
@@ -33,6 +33,11 @@ resource "aws_s3_bucket" "this" {
         sse_algorithm = "AES256"
       }
     }
+  }
+
+  logging {
+    target_bucket = "${var.env}"
+    target_prefix = "s3"
   }
 }
 
